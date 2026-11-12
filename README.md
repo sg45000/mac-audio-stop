@@ -23,6 +23,23 @@ xcodebuild -project AutoMute.xcodeproj -scheme AutoMute \
 
 Xcodeで実行する場合は`AutoMute.xcodeproj`を開き、`AutoMute`スキームと`My Mac`を選びます。Releaseは上のビルドコマンドの`Debug`を`Release`に置き換えて作成できます。
 
+## 普段使いの配置とログイン時の起動
+
+開発中の版を含め、起動中のAutoMuteをメニューから終了してからRelease版を配置します。更新時も同じ手順でコピーします。
+
+```sh
+xcodebuild -project AutoMute.xcodeproj -scheme AutoMute \
+  -configuration Release -destination 'platform=macOS,arch=arm64' \
+  -derivedDataPath build build
+mkdir -p "$HOME/Applications"
+ditto ./build/Build/Products/Release/AutoMute.app "$HOME/Applications/AutoMute.app"
+open "$HOME/Applications/AutoMute.app"
+```
+
+ログイン時の起動はmacOSの標準設定を使います。「システム設定」→「一般」→「ログイン項目と機能拡張」の「ログイン時に開く」に、配置した`~/Applications/AutoMute.app`を追加します。詳しくは[Appleの手順](https://support.apple.com/ja-jp/guide/mac-help/-mh15189/mac)を参照してください。
+
+次回ログイン時には前回のON/OFFで起動します。自動起動を止める場合は、このログイン項目を削除します。
+
 ## 起動と操作
 
 アプリを起動します。
