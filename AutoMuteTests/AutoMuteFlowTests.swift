@@ -193,6 +193,57 @@ final class AutoMuteFlowTests: XCTestCase {
         XCTAssertTrue(hardware.outputObservation?.cancelled == true)
         XCTAssertTrue(hardware.muteObservation?.cancelled == true)
     }
+
+    func testOFF中の変更とON再開直後にはミュートしない() async throws {
+        let hardware = FakeAudioHardware()
+        hardware.output = .bluetooth
+        let controller = AutoMuteController(hardware: hardware)
+        try controller.start()
+        controller.stop()
+        XCTAssertFalse(controller.isRunning)
+        hardware.output = .speaker
+        hardware.notifyOutput()
+        XCTAssertEqual(hardware.muteWrites, 0)
+        try controller.start()
+        XCTAssertTrue(controller.isRunning)
+        XCTAssertEqual(hardware.muteWrites, 0)
+        hardware.output = .bluetooth
+        hardware.notifyOutput()
+        hardware.output = .speaker
+        hardware.notifyOutput()
+        XCTAssertEqual(hardware.muteWrites, 1)
+        controller.stop()
+    }
+
+    func testOFFで確認待ちを取り消しても既存のミュートは解除しない() async throws {
+        let hardware = FakeAudioHardware()
+        hardware.output = .bluetooth
+        let controller = AutoMuteController(hardware: hardware)
+        try controller.start()
+        hardware.output = .speaker
+        hardware.notifyOutput()
+        hardware.muted = true
+        controller.stop()
+        hardware.notifyMute()
+        XCTAssertFalse(controller.isRunning)
+        XCTAssertTrue(hardware.muted)
+        XCTAssertEqual(hardware.muteWrites, 1)
+        XCTAssertTrue(hardware.muteObservation?.cancelled == true)
+    }
+
+    func test再開に失敗したらOFFを維持し再度ONにできる() async throws {
+        let hardware = FakeAudioHardware()
+        let controller = AutoMuteController(hardware: hardware)
+        hardware.failOutputObservation = true
+        XCTAssertThrowsError(try controller.start())
+        XCTAssertFalse(controller.isRunning)
+        XCTAssertEqual(hardware.muteWrites, 0)
+        hardware.failOutputObservation = false
+        try controller.start()
+        XCTAssertTrue(controller.isRunning)
+        XCTAssertEqual(hardware.muteWrites, 0)
+        controller.stop()
+    }
 }
 
 private extension AudioDeviceSnapshot {

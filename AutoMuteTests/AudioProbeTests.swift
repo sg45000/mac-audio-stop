@@ -219,6 +219,7 @@ final class FakeObservation: AudioObservation {
 final class FakeAudioHardware: AudioHardwareAccess {
     var output: AudioDeviceSnapshot = .speaker
     var failOutput = false
+    var failOutputObservation = false
     var failWrite = false
     var muted = false
     var muteSupported = true
@@ -235,6 +236,7 @@ final class FakeAudioHardware: AudioHardwareAccess {
     }
 
     func observeDefaultOutput(_ handler: @escaping @MainActor () -> Void) throws -> any AudioObservation {
+        if failOutputObservation { throw AudioHardwareError("検証用のリスナー登録失敗") }
         outputHandler = handler
         let observation = FakeObservation()
         outputObservation = observation

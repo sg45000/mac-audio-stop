@@ -8,7 +8,7 @@ func shouldAutoMute(from previous: AudioDeviceSnapshot?, to current: AudioDevice
 final class AutoMuteController {
     private let monitor: AudioOutputMonitor
     private let verifier: MuteVerifier
-    private var isRunning = false
+    private(set) var isRunning = false
 
     init(hardware: any AudioHardwareAccess) {
         monitor = AudioOutputMonitor(hardware: hardware)
