@@ -97,11 +97,11 @@ final class MuteVerifier {
         let elapsed = requestTime.map { String(format: "%.3f ms", $0.duration(to: .now) / .milliseconds(1)) } ?? "書き込みなし"
         requestTime = nil
         if result.succeeded {
-            ProbeLog.mute.notice("ミュート検証成功: \(result.logDescription, privacy: .public) 設定要求からの経過=\(elapsed, privacy: .public)")
+            ProbeLog.mute.notice("ミュート処理成功: \(result.logDescription, privacy: .public) 設定要求からの経過=\(elapsed, privacy: .public)")
         } else if result == .cancelled {
-            ProbeLog.mute.notice("ミュート検証中止")
+            ProbeLog.mute.notice("ミュート反映の確認を中止しました")
         } else {
-            ProbeLog.mute.error("ミュート検証失敗: \(result.logDescription, privacy: .public) 設定要求からの経過=\(elapsed, privacy: .public)")
+            ProbeLog.mute.error("ミュート処理失敗: \(result.logDescription, privacy: .public) 設定要求からの経過=\(elapsed, privacy: .public)")
         }
         completion(result)
     }

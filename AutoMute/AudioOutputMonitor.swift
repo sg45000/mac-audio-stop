@@ -14,7 +14,7 @@ final class AudioOutputMonitor {
         observation = try hardware.observeDefaultOutput { [weak self] in self?.refresh() }
         do {
             previous = try hardware.defaultOutput()
-            ProbeLog.devices.notice("初期出力: \(self.previous!.logDescription, privacy: .public)。観測のみでミュートは実行しません")
+            ProbeLog.devices.notice("初期出力: \(self.previous!.logDescription, privacy: .public)。初期取得ではミュートしません")
         } catch {
             previous = nil
             ProbeLog.devices.error("初期出力取得失敗: \(String(describing: error), privacy: .public)")
@@ -31,6 +31,7 @@ final class AudioOutputMonitor {
 
     private func refresh() {
         guard observation != nil else { return }
+        ProbeLog.devices.debug("出力変更通知を受信しました")
         do {
             let current = try hardware.defaultOutput()
             let old = previous
@@ -40,7 +41,7 @@ final class AudioOutputMonitor {
                 return
             }
             let before = old?.logDescription ?? "未確定"
-            ProbeLog.devices.notice("出力変更: 前=[\(before, privacy: .public)] 後=[\(current.logDescription, privacy: .public)]。観測のみ")
+            ProbeLog.devices.notice("出力変更: 前=[\(before, privacy: .public)] 後=[\(current.logDescription, privacy: .public)]")
             onChange?(old, current)
         } catch {
             previous = nil

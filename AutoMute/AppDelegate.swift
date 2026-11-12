@@ -3,20 +3,18 @@ import AppKit
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let hardware = CoreAudioHardware()
-    private var monitor: AudioOutputMonitor?
+    private var controller: AutoMuteController?
     private var verifier: MuteVerifier?
     private var signals: [any DispatchSourceSignal] = []
     private(set) var exitCode: Int32 = 0
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        ProbeLog.lifecycle.notice("AutoMute技術検証を起動しました。自動ミュートは未接続です")
+        ProbeLog.lifecycle.notice("AutoMuteを起動しました")
         installTerminationSignals()
-        let monitor = AudioOutputMonitor(hardware: hardware)
-        self.monitor = monitor
         do {
-            try monitor.start()
             if CommandLine.arguments.contains("--verify-mute-once") {
                 #if DEBUG
+                ProbeLog.lifecycle.notice("一度限りのミュート検証を実行します")
                 let target = try hardware.defaultOutput()
                 let verifier = MuteVerifier(hardware: hardware)
                 self.verifier = verifier
@@ -30,6 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 exitCode = 1
                 NSApplication.shared.terminate(nil)
                 #endif
+            } else {
+                let controller = AutoMuteController(hardware: hardware)
+                self.controller = controller
+                try controller.start()
+                ProbeLog.lifecycle.notice("Bluetoothから内蔵スピーカーへの変更の自動ミュートを開始しました")
             }
         } catch {
             ProbeLog.lifecycle.error("起動失敗: \(String(describing: error), privacy: .public)")
@@ -39,7 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        monitor?.stop()
+        controller?.stop()
         verifier?.cancel()
         signals.forEach { $0.cancel() }
         signals.removeAll()
